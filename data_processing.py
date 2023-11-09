@@ -73,8 +73,12 @@ class Table:
     def aggregate(self, function, aggregation_key):
         temps = []
         for item1 in self.table:
-            temps.append(float(item1[aggregation_key]))
+            if self.__is_float(item1[aggregation_key]):
+                temps.append(float(item1[aggregation_key]))
+            else:
+                temps.append(item1[aggregation_key])
         return function(temps)
+
     
     def select(self, attributes_list):
         temps = []
@@ -86,8 +90,18 @@ class Table:
             temps.append(dict_temp)
         return temps
 
+    def __is_float(self, element):
+        if element is None: 
+            return False
+        try:
+            float(element)
+            return True
+        except ValueError:
+            return False
+
     def __str__(self):
         return self.table_name + ':' + str(self.table)
+
 
 table1 = Table('cities', cities)
 table2 = Table('countries', countries)
@@ -136,6 +150,12 @@ survival_rate_male = len(survived_male.table) / len(male.table)
 survival_rate_female = len(survived_female.table) / len(female.table)
 print(survival_rate_male)
 print(survival_rate_female)
+print()
+
+print('Total number of male passengers embarked at Southampton')
+passenger = table5.filter(lambda passenger: passenger['embarked'] == 'Southampton')
+print(len(passenger.table))
+print()
 
 # print("Test select: only displaying two fields, city and latitude, for cities in Italy")
 # my_table1_selected = my_table1_filtered.select(['city', 'latitude'])
