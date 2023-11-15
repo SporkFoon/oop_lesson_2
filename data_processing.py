@@ -99,6 +99,35 @@ class Table:
         except ValueError:
             return False
 
+    def pivot_table(self, keys_to_pivot_list, keys_to_aggreagte_list, aggregate_func_list):
+
+        unique_values_list = []
+        for key_item in keys_to_pivot_list:
+            temp = []
+            for dict in self.table:
+                if dict[key_item] not in temp:
+                    temp.append(dict[key_item])
+            unique_values_list.append(temp)
+
+        # combination of unique value lists
+        import combination_gen
+        comb_list = combination_gen.gen_comb_list(unique_values_list)
+
+        pivot_table = []
+        # filter each combination
+        for item in comb_list:
+            temp_filter_table = self
+            for i in range(len(item)):
+                temp_filter_table = temp_filter_table.filter(lambda x: x[keys_to_pivot_list[i]] == item[i])
+
+            # aggregate over the filtered table
+            aggregate_val_list = []
+            for i in range(len(keys_to_aggreagte_list)):
+                aggregate_val = temp_filter_table.aggregate(aggregate_func_list[i], keys_to_aggreagte_list[i])
+                aggregate_val_list.append(aggregate_val)
+            pivot_table.append([item, aggregate_val_list])
+        return pivot_table
+
     def __str__(self):
         return self.table_name + ':' + str(self.table)
 
@@ -114,6 +143,9 @@ my_DB.insert(table2)
 my_DB.insert(table3)
 my_DB.insert(table4)
 my_DB.insert(table5)
+my_table5 = my_DB.search('titanic')
+my_pivot = my_table5.pivot_table(['embarked', 'gender', 'class'], ['fare', 'fare', 'fare', 'last'], [lambda x: min(x), lambda x: max(x), lambda x: sum(x)/len(x), lambda x: len(x)])
+
 
 print("Player on a team with “ia” in the team name played less than 200 minutes and made more than 100 passes") 
 table3_player = table3.filter(lambda player: 'ia' in player['team'] and int(player['minutes']) < 200 and int(player['passes']) > 100)
@@ -156,6 +188,9 @@ print('Total number of male passengers embarked at Southampton')
 passenger = table5.filter(lambda passenger: passenger['embarked'] == 'Southampton')
 print(len(passenger.table))
 print()
+
+print('Pivot table test')
+print(my_pivot)
 
 # print("Test select: only displaying two fields, city and latitude, for cities in Italy")
 # my_table1_selected = my_table1_filtered.select(['city', 'latitude'])
